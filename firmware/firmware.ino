@@ -7,6 +7,7 @@
 #include <Adafruit_GFX.h>
 #include "settings.h"
 #include "debug.h"
+#include "bitmaps.h"
 
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
     MATRIX_W, MATRIX_H,
@@ -81,6 +82,9 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
     if(WiFi.status()== WL_CONNECTED){
+      matrix.drawRGBBitmap(0, 0, CLOCK, 8, 8);
+      matrix.show();
+      delay(3000);
       fetchDateTime(datetime);
       display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
       display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
@@ -89,7 +93,7 @@ void loop() {
     } else {
       DEBUG_PRINTLN("WiFi Disconnected");
     }
-    delay(15*1000);
+    delay(5*1000);
 }
 
 void fetchDateTime(char str[]) {
