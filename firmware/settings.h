@@ -36,7 +36,7 @@
 #define MATRIX_H 8
 #define MATRIX_PIN 2
 #define MATRIX_BRIGHTNESS 64
-#define MATRIX_TYPE (NEO_MATRIX_TOP + NEO_MATRIX_RIGHT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG)
+#define MATRIX_TYPE (NEO_MATRIX_BOTTOM + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG)
 #define MATRIX_PIXEL_TYPE (NEO_GRB + NEO_KHZ800) 
 // ============================================================================
 #endif
