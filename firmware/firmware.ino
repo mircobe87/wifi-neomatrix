@@ -5,6 +5,8 @@
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_GFX.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "settings.h"
 #include "debug.h"
 #include "bitmaps.h"
@@ -16,9 +18,17 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
     MATRIX_PIXEL_TYPE
 );
 
+// Setup a oneWire instance to communicate with any OneWire devices
+OneWire oneWire(T_SENS_PIN);
+// Pass our oneWire reference to Dallas Temperature sensor
+DallasTemperature sensors(&oneWire);
+
 void setup() {
     // Setup serial port
     Serial.begin(SERIAL_SPEED);
+
+    // Start the DS18B20 sensor
+    sensors.begin();
 
     DEBUG_PRINT("matrix type: ");
     DEBUG_PRINTLN(MATRIX_TYPE);
@@ -75,6 +85,7 @@ void setup() {
 }
 
 char datetime[32] = {0};
+char inner_temp[8] = {0};
 
 void loop() {
     digitalWrite(LED_BUILTIN, LOW);
@@ -82,8 +93,7 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
     if(WiFi.status()== WL_CONNECTED){
-      matrix.drawRGBBitmap(0, 0, CLOCK, 8, 8);
-      matrix.show();
+      display_image(CLOCK);
       delay(3000);
       fetchDateTime(datetime);
       display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
@@ -93,6 +103,10 @@ void loop() {
     } else {
       DEBUG_PRINTLN("WiFi Disconnected");
     }
+    display_image(OUTDOOR);
+    delay(3000);
+    read_inner_temp(inner_temp);
+    display_scrollText(matrix.Color(0, 128, 128), inner_temp, 75);
     delay(5*1000);
 }
 
@@ -149,4 +163,34 @@ void display_scrollText(uint16_t color, const char text[], uint delayMils) {
         matrix.show();
         delay(delayMils);
     }
+}
+
+void display_image(const uint16_t bitmap[]) {
+    matrix.clear();
+    matrix.drawRGBBitmap(0, 0, bitmap, 8, 8);
+    matrix.show();
+}
+
+void read_inner_temp(char str_out[]) {
+    char str_temp[8];
+    float temperature;
+
+    sensors.requestTemperatures();
+
+#ifdef T_SENS_UNIT_CELSIUS
+    temperature = sensors.getTempCByIndex(0);
+#else
+    temperature = sensors.getTempFByIndex(0);
+#endif
+    DEBUG_PRINT(temperature);
+    /* 6 is mininum width, 2 is precision; float value is copied onto str_temp*/
+    dtostrf(temperature, 6, 2, str_temp);
+
+#ifdef T_SENS_UNIT_CELSIUS
+    DEBUG_PRINTLN(" °C");
+    sprintf(str_out,"%s C", str_temp);
+#else
+    DEBUG_PRINTLN(" °F");
+    sprintf(str_out,"%s F", str_temp);
+#endif
 }
