@@ -5,6 +5,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_GFX.h>
+#include <Fonts/Tiny3x3a2pt7b.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include "settings.h"
@@ -120,10 +121,12 @@ void loop() {
       display_image(BMP_CLOCK);
       delay(3000);
       fetchDateTime(datetime);
-      display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
-      display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
+      // display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
+      // display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
       DEBUG_PRINT("Now: ");
       DEBUG_PRINTLN(datetime);
+      display_datetime(datetime, matrix.Color(128, 0, 128), 75);
+      delay(10000);
     } else {
       DEBUG_PRINTLN("WiFi Disconnected");
     }
@@ -131,7 +134,7 @@ void loop() {
     delay(3000);
     read_inner_temp(inner_temp);
     display_scrollText(matrix.Color(0, 128, 128), inner_temp, 75);
-    delay(5*1000);
+    delay(1000);
 }
 
 void fetchDateTime(char str[]) {
@@ -180,6 +183,7 @@ void display_scrollText(uint16_t color, const char text[], uint delayMils) {
     matrix.clear();
     matrix.show();
     matrix.setTextColor(color);
+    matrix.setFont();
     for(int x=MATRIX_W; x > (len+1)*-6; x--){
         matrix.clear();
         matrix.setCursor(x, 0);
@@ -231,4 +235,37 @@ void rainbow() {
         matrix.show();
         delay(75);
     }
+}
+
+void display_datetime(const char datetime_str[], uint16_t color, int delay_mils) {
+    //yyyy-mm-dd
+    char date_str[11] = {0x00};
+    //hh:mm
+    char hh_str[3] = {0x00};
+    char mm_str[3] = {0x00};
+    
+    for (int i=0, j=0, h=0; i<19; i++) {
+        char c = datetime_str[i];
+        if (i<10) {
+            date_str[i] = c;
+        }
+        if (10<i && i<13) {
+            hh_str[j] = c;
+            j++;
+        }
+        if (13<i && i<16) {
+            mm_str[h] = c;
+            h++;
+        }
+    }
+
+    // uint16_t color = matrix.Color(128, 0, 128);
+    display_scrollText(color, date_str, delay_mils);
+    matrix.setTextColor(color);
+    matrix.setFont(&Tiny3x3a2pt7b);
+    matrix.setCursor(1, 2);
+    matrix.print(hh_str);
+    matrix.setCursor(1, 7);
+    matrix.print(mm_str);
+    matrix.show();
 }
