@@ -30,15 +30,21 @@ void setup() {
     // Start the DS18B20 sensor
     sensors.begin();
 
-    DEBUG_PRINT("matrix type: ");
-    DEBUG_PRINTLN(MATRIX_TYPE);
-
     // Initialize Led Matrix
     matrix.begin();
     matrix.clear();
     matrix.setTextWrap(false);
     matrix.setRotation(0);
     matrix.setBrightness(MATRIX_BRIGHTNESS);
+
+    // Begin WiFi
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+
+    DEBUG_PRINT("matrix type: ");
+    DEBUG_PRINTLN(MATRIX_TYPE);
+
+/*
+
     
     for (int x=0; x<MATRIX_W; x++) {
         for (int y=0; y<MATRIX_H; y++) {
@@ -53,35 +59,49 @@ void setup() {
             matrix.show();
         }
     }
+    */
 
     // Initialize the LED_BUILTIN pin as an output
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
  
-    // Begin WiFi
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+
  
     // Connecting to WiFi...
     DEBUG_PRINT("Connecting to ");
     DEBUG_PRINTLN(WIFI_SSID);
   
     // Loop continuously while WiFi is not connected
-    while (WiFi.status() != WL_CONNECTED) {
-        display_scrollText(matrix.Color(64, 0, 0), "Connecting to", 40);
+    unsigned long wifi_conn_start = millis();
+    display_scrollText(matrix.Color(64, 0, 0), "Connecting to", 40);
+    
+    do {
         display_scrollText(matrix.Color(64, 64, 64), WIFI_SSID, 40);
         digitalWrite(LED_BUILTIN, HIGH);
-        delay(100);
+        delay(50);
         digitalWrite(LED_BUILTIN, LOW);
-        delay(900);
+        delay(50);
         DEBUG_PRINT(".");
+    } while (WiFi.status() != WL_CONNECTED && millis() - wifi_conn_start <= WIFI_TIMEOUT);
+
+    if (WiFi.status() != WL_CONNECTED) {
+        DEBUG_PRINTLN();
+        DEBUG_PRINT("Connection FAILED");
+        display_image(BMP_FAIL);
+        delay(3000);
+        display_scrollText(matrix.Color(64, 0, 0), "Connection FAILED", 40);
+    } else {
+        // Connected to WiFi
+        DEBUG_PRINTLN();
+        DEBUG_PRINT("Connected! IP address: ");
+        DEBUG_PRINTLN(WiFi.localIP());
+        display_image(BMP_OK);
+        delay(3000);
+        // display_scrollText(matrix.Color(0, 64, 0), "Connected! IP address:", 40);
+        display_scrollText(matrix.Color(0, 64, 0), WiFi.localIP().toString().c_str(), 40);
     }
  
-    // Connected to WiFi
-    DEBUG_PRINTLN();
-    DEBUG_PRINT("Connected! IP address: ");
-    DEBUG_PRINTLN(WiFi.localIP());
-    display_scrollText(matrix.Color(0, 64, 0), "Connected! IP address:", 40);
-    display_scrollText(matrix.Color(0, 64, 0), WiFi.localIP().toString().c_str(), 40);
+    
 }
 
 char datetime[32] = {0};
@@ -93,7 +113,7 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
     if(WiFi.status()== WL_CONNECTED){
-      display_image(CLOCK);
+      display_image(BMP_CLOCK);
       delay(3000);
       fetchDateTime(datetime);
       display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
@@ -103,7 +123,7 @@ void loop() {
     } else {
       DEBUG_PRINTLN("WiFi Disconnected");
     }
-    display_image(OUTDOOR);
+    display_image(BMP_OUTDOOR);
     delay(3000);
     read_inner_temp(inner_temp);
     display_scrollText(matrix.Color(0, 128, 128), inner_temp, 75);

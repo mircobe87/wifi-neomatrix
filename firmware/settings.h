@@ -15,8 +15,10 @@
 // ----------------------------------------------------------------------------
 // WIFI_SSID: the name of the WiFi we want to connect
 // WIFI_PASS: the WiFi password
+// WIFI_TIMEOUT: mils to wait before to consider wifi connection failed
 #define WIFI_SSID ""
 #define WIFI_PASS ""
+#define WIFI_TIMEOUT 5000
 
 // Clock settings
 // ----------------------------------------------------------------------------
