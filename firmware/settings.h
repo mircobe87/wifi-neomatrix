@@ -45,7 +45,15 @@
 // ------------------------------------------------------------------------------
 // T_SENS_PIN: Pin number for data connection
 // T_SENS_UNIT_CELSIUS: comment this to read temperature as Fahrenheit
+//                T_COOL_ZONE     T_CONFORT_ZONE-T_CONFORT_ZONE_W/2    T_CONFORT_ZONE+T_CONFORT_ZONE_W/2     T_HOT_ZONE
+//                     |                          |                                   |                           |
+// --- blue color --->)[<-------- cyano -------->)[<------------- green ------------->](<-------- yellow -------->](<--- red ---
 #define T_SENS_PIN 13
 #define T_SENS_UNIT_CELSIUS
+#define T_HOT_ZONE 28
+#define T_CONFORT_ZONE 21
+#define T_CONFORT_ZONE_W 6
+#define T_COOL_ZONE 14
+
 // ============================================================================
 #endif

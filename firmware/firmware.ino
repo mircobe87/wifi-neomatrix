@@ -132,8 +132,8 @@ void loop() {
     }
     display_image(BMP_OUTDOOR);
     delay(3000);
-    read_inner_temp(inner_temp);
-    display_scrollText(matrix.Color(0, 128, 128), inner_temp, 75);
+    uint16_t inner_temp_color = read_inner_temp(inner_temp);
+    display_scrollText(inner_temp_color, inner_temp, 75);
     delay(1000);
 }
 
@@ -199,7 +199,8 @@ void display_image(const uint16_t bitmap[]) {
     matrix.show();
 }
 
-void read_inner_temp(char str_out[]) {
+uint16_t read_inner_temp(char str_out[]) {
+    uint16_t colors[] = {0x001F, 0x0410, 0x07E0, 0xFC00, 0xF800};
     char str_temp[8];
     float temperature;
 
@@ -210,6 +211,7 @@ void read_inner_temp(char str_out[]) {
 #else
     temperature = sensors.getTempFByIndex(0);
 #endif
+
     DEBUG_PRINT(temperature);
     /* 6 is mininum width, 2 is precision; float value is copied onto str_temp*/
     dtostrf(temperature, 6, 2, str_temp);
@@ -221,6 +223,20 @@ void read_inner_temp(char str_out[]) {
     DEBUG_PRINTLN(" °F");
     sprintf(str_out,"%s F", str_temp);
 #endif
+
+    if (temperature < T_COOL_ZONE) {
+        return colors[0];
+    }
+    if (temperature < T_CONFORT_ZONE-T_CONFORT_ZONE_W/2.0) {
+        return colors[1];
+    }
+    if (temperature <= T_CONFORT_ZONE+T_CONFORT_ZONE_W/2.0) {
+        return colors[2];
+    }
+    if (temperature <= T_HOT_ZONE) {
+        return colors[3];
+    }
+    return colors[4];
 }
 
 void rainbow() {
