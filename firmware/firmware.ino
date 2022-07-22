@@ -37,6 +37,8 @@ void setup() {
     matrix.setRotation(0);
     matrix.setBrightness(MATRIX_BRIGHTNESS);
 
+    rainbow();
+
     // Begin WiFi
     WiFi.begin(WIFI_SSID, WIFI_PASS);
 
@@ -60,6 +62,8 @@ void setup() {
         }
     }
     */
+
+
 
     // Initialize the LED_BUILTIN pin as an output
     pinMode(LED_BUILTIN, OUTPUT);
@@ -213,4 +217,18 @@ void read_inner_temp(char str_out[]) {
     DEBUG_PRINTLN(" °F");
     sprintf(str_out,"%s F", str_temp);
 #endif
+}
+
+void rainbow() {
+    uint16_t colors[] = {0xF800, 0x8400, 0xFFE0, 0x07E0, 0x0410, 0x07FF, 0x001F, 0x8010};
+    matrix.clear();
+    for (int s=0; s<MATRIX_W*MATRIX_W; s++) {
+        for (int y=0; y<MATRIX_H; y++) {
+            for (int x=0; x<MATRIX_W; x++) {
+                matrix.drawPixel((x+y+s)%MATRIX_W, y, colors[(y*MATRIX_H+x)%8]);
+            }
+        }
+        matrix.show();
+        delay(75);
+    }
 }
