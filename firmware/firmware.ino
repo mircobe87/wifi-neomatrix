@@ -24,6 +24,24 @@ OneWire oneWire(T_INDOOR_PIN);
 // Pass our oneWire reference to Dallas Temperature sensor
 DallasTemperature sensors(&oneWire);
 
+uint16_t temp_zone_colors[] = {0x001F, 0x0410, 0x07E0, 0xFC00, 0xF800};
+
+uint16_t get_temp_color(double temp, double coolZone, double hotZone, double confortZone, double confortZoneWidth) {
+    if (temp < coolZone) {
+        return temp_zone_colors[0];
+    }
+    if (temp < confortZone-confortZoneWidth/2.0) {
+        return temp_zone_colors[1];
+    }
+    if (temp <= confortZone+confortZoneWidth/2.0) {
+        return temp_zone_colors[2];
+    }
+    if (temp <= hotZone) {
+        return temp_zone_colors[3];
+    }
+    return temp_zone_colors[4];
+}
+
 void setup() {
     // Setup serial port
     Serial.begin(SERIAL_SPEED);
@@ -45,25 +63,6 @@ void setup() {
 
     DEBUG_PRINT("matrix type: ");
     DEBUG_PRINTLN(MATRIX_TYPE);
-
-/*
-
-    
-    for (int x=0; x<MATRIX_W; x++) {
-        for (int y=0; y<MATRIX_H; y++) {
-            int i = x*MATRIX_W+y;
-            uint32_t color = matrix.Color(
-              256*i/(MATRIX_W*MATRIX_H),
-              256*i/(MATRIX_W*MATRIX_H),
-              256*i/(MATRIX_W*MATRIX_H)
-            );
-            matrix.drawPixel(x, y, color);
-            delay(50);
-            matrix.show();
-        }
-    }
-    */
-
 
 
     // Initialize the LED_BUILTIN pin as an output
@@ -111,6 +110,8 @@ void setup() {
 
 char datetime[32] = {0};
 char inner_temp[8] = {0};
+char location[32] = {0};
+char outer_temp[8] = {0};
 
 void loop() {
     digitalWrite(LED_BUILTIN, LOW);
@@ -127,6 +128,9 @@ void loop() {
       DEBUG_PRINTLN(datetime);
       display_datetime(datetime, matrix.Color(128, 0, 128), 75);
       delay(10000);
+      uint16_t outer_temp_color = read_outdoor_temp(location, 31, outer_temp, 7);
+      display_scrollText(outer_temp_color, location, 75);
+      display_scrollText(outer_temp_color, outer_temp, 75);
     } else {
       DEBUG_PRINTLN("WiFi Disconnected");
     }
@@ -224,19 +228,60 @@ uint16_t read_inner_temp(char str_out[]) {
     sprintf(str_out,"%s F", str_temp);
 #endif
 
-    if (temperature < T_INDOOR_COOL_ZONE) {
-        return colors[0];
+    return get_temp_color(temperature, T_INDOOR_COOL_ZONE, T_INDOOR_HOT_ZONE, T_INDOOR_CONFORT_ZONE, T_INDOOR_CONFORT_ZONE_W);
+}
+
+uint16_t read_outdoor_temp(char location[], short len_location, char temp_str[], short len_temp_str) {
+    WiFiClient client;
+    HTTPClient http;
+
+    String serverPath = T_OUTDOOR_API;
+    const char* name;
+    double temp;
+    uint16_t t_color = 0;
+
+    // Your Domain name with URL path or IP address with path
+    http.begin(client, serverPath.c_str());
+  
+    // Send HTTP GET request
+    int httpResponseCode = http.GET();
+  
+    if (httpResponseCode>0) {
+        DEBUG_PRINT("HTTP Response code: ");
+        DEBUG_PRINTLN(httpResponseCode);
+    
+        JSONVar myObject = JSON.parse(http.getString());
+        if (JSON.typeof(myObject) == "undefined") {
+            DEBUG_PRINTLN("Parsing input failed!");
+        } else {
+            DEBUG_PRINTLN(myObject);
+            name = (const char*) myObject["name"];
+            char c;
+            int i = 0;
+            while( (c = *(name+i)) != 0 ) {
+              if (i>=len_location) break;
+              location[i] = c;
+              i++;
+            }
+
+            temp = (double) myObject["main"]["temp"];
+            char buffer[8] = {0};
+            dtostrf(temp, 5, 2, buffer);
+#ifdef T_OUTDOOR_UNIT_CELSIUS
+            sprintf(temp_str, "%s C", buffer);
+#else
+            sprintf(temp_str, "%s F", buffer);
+#endif
+            t_color = get_temp_color(temp, T_OUTDOOR_COOL_ZONE, T_OUTDOOR_HOT_ZONE, T_OUTDOOR_CONFORT_ZONE, T_OUTDOOR_CONFORT_ZONE_W);
+        }
+
+    } else {
+        DEBUG_PRINT("Error code: ");
+        DEBUG_PRINTLN(httpResponseCode);
     }
-    if (temperature < T_INDOOR_CONFORT_ZONE-T_INDOOR_CONFORT_ZONE_W/2.0) {
-        return colors[1];
-    }
-    if (temperature <= T_INDOOR_CONFORT_ZONE+T_INDOOR_CONFORT_ZONE_W/2.0) {
-        return colors[2];
-    }
-    if (temperature <= T_INDOOR_HOT_ZONE) {
-        return colors[3];
-    }
-    return colors[4];
+    // Free resources
+    http.end();
+    return t_color;
 }
 
 void rainbow() {

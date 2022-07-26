@@ -55,5 +55,29 @@
 #define T_INDOOR_CONFORT_ZONE_W 6
 #define T_INDOOR_COOL_ZONE 14
 
+// Outdoor Temp settings (https://openweathermap.org/)
+// ----------------------------------------------------------------------------
+// T_OUTDOOR_LAT: latitude of the location [90.0, -90.0]
+// T_OUTDOOR_LON: longitude of the location [180.0, -180.0]
+// T_OUTDOOR_UNIT_CELSIUS: comment to see Fahrenheit temp.
+//            T_OUTDOOR_COOL_ZONE     T_OUTDOOR_CONFORT_ZONE-T_OUTDOOR_CONFORT_ZONE_W/2    T_OUTDOOR_CONFORT_ZONE+T_OUTDOOR_CONFORT_ZONE_W/2     T_OUTDOOR_HOT_ZONE
+//                     |                                    |                                                  |                                     |
+// --- blue color --->)[<------------- cyano ------------->)[<-------------------- green --------------------->](<------------- yellow ------------->](<--- red ---
+// T_OUTDOOR_APIKEY: openweathermap api key used to consume web api. (https://openweathermap.org/price)
+#define T_OUTDOOR_LAT "41.890161"
+#define T_OUTDOOR_LON "12.492252"
+#define T_OUTDOOR_UNIT_CELSIUS
+#define T_OUTDOOR_HOT_ZONE 30
+#define T_OUTDOOR_CONFORT_ZONE 18
+#define T_OUTDOOR_CONFORT_ZONE_W 8
+#define T_OUTDOOR_COOL_ZONE 10
+#define T_OUTDOOR_APIKEY ""
+
+#ifdef T_OUTDOOR_UNIT_CELSIUS
+    #define T_OUTDOOR_API ("http://api.openweathermap.org/data/2.5/weather?lat=" T_OUTDOOR_LAT "&lon=" T_OUTDOOR_LON "&appid=" T_OUTDOOR_APIKEY "&units=metric")
+#else
+    #define T_OUTDOOR_API ("http://api.openweathermap.org/data/2.5/weather?lat=" T_OUTDOOR_LAT "&lon=" T_OUTDOOR_LON "&appid=" T_OUTDOOR_APIKEY "&units=imperial")
+#endif
+
 // ============================================================================
 #endif
