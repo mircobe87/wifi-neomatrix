@@ -122,19 +122,19 @@ void loop() {
       display_image(BMP_CLOCK);
       delay(3000);
       fetchDateTime(datetime);
-      // display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
-      // display_scrollText(matrix.Color(128, 0, 128), datetime, 75);
       DEBUG_PRINT("Now: ");
       DEBUG_PRINTLN(datetime);
       display_datetime(datetime, matrix.Color(128, 0, 128), 75);
       delay(10000);
       uint16_t outer_temp_color = read_outdoor_temp(location, 31, outer_temp, 7);
+      display_image(BMP_OUTDOOR);
+      delay(3000);
       display_scrollText(outer_temp_color, location, 75);
       display_scrollText(outer_temp_color, outer_temp, 75);
     } else {
       DEBUG_PRINTLN("WiFi Disconnected");
     }
-    display_image(BMP_OUTDOOR);
+    display_image(BMP_INDOOR);
     delay(3000);
     uint16_t inner_temp_color = read_inner_temp(inner_temp);
     display_scrollText(inner_temp_color, inner_temp, 75);
@@ -265,6 +265,12 @@ uint16_t read_outdoor_temp(char location[], short len_location, char temp_str[],
             }
 
             temp = (double) myObject["main"]["temp"];
+            
+            DEBUG_PRINT("Location: ");
+            DEBUG_PRINT(name);
+            DEBUG_PRINT(", Temp.: ");
+            DEBUG_PRINTLN(temp);
+            
             char buffer[8] = {0};
             dtostrf(temp, 5, 2, buffer);
 #ifdef T_OUTDOOR_UNIT_CELSIUS
