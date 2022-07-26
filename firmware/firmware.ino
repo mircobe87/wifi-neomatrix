@@ -1,29 +1,45 @@
 #include <ESP8266WiFi.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
+#include <Arduino_JSON.h>
+#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoMatrix.h>
+#include <Adafruit_GFX.h>
 #include "settings.h"
+#include "debug.h"
 
-WiFiUDP ntpUDP;
-
-#ifdef NTP_SERVER
-    #ifdef NTP_OFFSET
-NTPClient timeClient(ntpUDP, NTP_SERVER, NTP_OFFSET);
-    #else
-NTPClient timeClient(ntpUDP, NTP_SERVER);
-    #endif
-#else
-    #ifdef NTP_OFFSET
-NTPClient timeClient(ntpUDP, NTP_OFFSET);
-    #else
-NTPClient timeClient(ntpUDP);
-    #endif
-#endif
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
+    MATRIX_W, MATRIX_H,
+    MATRIX_PIN,
+    MATRIX_TYPE,
+    MATRIX_PIXEL_TYPE
+);
 
 void setup() {
-#ifdef SERIAL_SPEED
     // Setup serial port
-    Serial.begin(115200);
-#endif
+    Serial.begin(SERIAL_SPEED);
+
+    DEBUG_PRINT("matrix type: ");
+    DEBUG_PRINTLN(MATRIX_TYPE);
+
+    // Initialize Led Matrix
+    matrix.begin();
+    matrix.clear();
+    matrix.setBrightness(MATRIX_BRIGHTNESS);
+    
+    for (int x=0; x<MATRIX_W; x++) {
+        for (int y=0; y<MATRIX_H; y++) {
+            int i = x*MATRIX_W+y;
+            uint32_t color = matrix.Color(
+              256*i/(MATRIX_W*MATRIX_H),
+              256*i/(MATRIX_W*MATRIX_H),
+              256*i/(MATRIX_W*MATRIX_H)
+            );
+            matrix.drawPixel(x, y, color);
+            delay(125);
+            matrix.show();
+        }
+    }
 
     // Initialize the LED_BUILTIN pin as an output
     pinMode(LED_BUILTIN, OUTPUT);
@@ -33,9 +49,8 @@ void setup() {
     WiFi.begin(WIFI_SSID, WIFI_PASS);
  
     // Connecting to WiFi...
-    SERIAL_PRINT("Connecting to ");
-    SERIAL_PRINT(WIFI_SSID);
-    SERIAL_PRINT("\n");
+    DEBUG_PRINT("Connecting to ");
+    DEBUG_PRINTLN(WIFI_SSID);
   
     // Loop continuously while WiFi is not connected
     while (WiFi.status() != WL_CONNECTED) {
@@ -43,25 +58,66 @@ void setup() {
         delay(100);
         digitalWrite(LED_BUILTIN, LOW);
         delay(900);
-        SERIAL_PRINT(".");
+        DEBUG_PRINT(".");
     }
  
     // Connected to WiFi
-    SERIAL_PRINT("\n");
-    SERIAL_PRINT("Connected! IP address: ");
-    SERIAL_PRINT(WiFi.localIP());
-    SERIAL_PRINT("\n");
-
-    timeClient.begin();
+    DEBUG_PRINTLN();
+    DEBUG_PRINT("Connected! IP address: ");
+    DEBUG_PRINTLN(WiFi.localIP());
 }
- 
+
+char datetime[32] = {0};
+
 void loop() {
-    // put your main code here, to run repeatedly:
-    timeClient.update();
-    SERIAL_PRINT(timeClient.getFormattedTime());
-    SERIAL_PRINT("\n");
     digitalWrite(LED_BUILTIN, LOW);
     delay(500);
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
+    if(WiFi.status()== WL_CONNECTED){
+      fetchDateTime(datetime);
+      DEBUG_PRINT("Now: ");
+      DEBUG_PRINTLN(datetime);
+    } else {
+      DEBUG_PRINTLN("WiFi Disconnected");
+    }
+    delay(15*1000);
+}
+
+void fetchDateTime(char str[]) {
+  WiFiClient client;
+  HTTPClient http;
+
+  String serverPath = WORLD_TIME_API;
+  const char* datetime;
+  
+  // Your Domain name with URL path or IP address with path
+  http.begin(client, serverPath.c_str());
+  
+  // Send HTTP GET request
+  int httpResponseCode = http.GET();
+  
+  if (httpResponseCode>0) {
+    DEBUG_PRINT("HTTP Response code: ");
+    DEBUG_PRINTLN(httpResponseCode);
+    
+    JSONVar myObject = JSON.parse(http.getString());
+    if (JSON.typeof(myObject) == "undefined") {
+      DEBUG_PRINTLN("Parsing input failed!");
+    } else {
+      DEBUG_PRINTLN(myObject);
+      datetime = (const char*) myObject["datetime"];
+      char c;
+      for (int i=0; i< 19; i++) {
+        c = *(datetime + i);
+        str[i] = c == 'T' ? ' ' : c;
+      }
+    }
+
+  } else {
+    DEBUG_PRINT("Error code: ");
+    DEBUG_PRINTLN(httpResponseCode);
+  }
+  // Free resources
+  http.end();
 }
