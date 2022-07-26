@@ -41,19 +41,19 @@
 #define MATRIX_TYPE (NEO_MATRIX_BOTTOM + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG)
 #define MATRIX_PIXEL_TYPE (NEO_GRB + NEO_KHZ800)
 
-// Temp setting
+// Indoor Temp setting (Dallas DS18B20)
 // ------------------------------------------------------------------------------
-// T_SENS_PIN: Pin number for data connection
-// T_SENS_UNIT_CELSIUS: comment this to read temperature as Fahrenheit
-//                T_COOL_ZONE     T_CONFORT_ZONE-T_CONFORT_ZONE_W/2    T_CONFORT_ZONE+T_CONFORT_ZONE_W/2     T_HOT_ZONE
-//                     |                          |                                   |                           |
-// --- blue color --->)[<-------- cyano -------->)[<------------- green ------------->](<-------- yellow -------->](<--- red ---
-#define T_SENS_PIN 13
-#define T_SENS_UNIT_CELSIUS
-#define T_HOT_ZONE 28
-#define T_CONFORT_ZONE 21
-#define T_CONFORT_ZONE_W 6
-#define T_COOL_ZONE 14
+// T_INDOOR_PIN: Pin number for data connection
+// T_INDOOR_UNIT_CELSIUS: comment this to read temperature as Fahrenheit
+//            T_INDOOR_COOL_ZONE     T_INDOOR_CONFORT_ZONE-T_INDOOR_CONFORT_ZONE_W/2    T_INDOOR_CONFORT_ZONE+T_INDOOR_CONFORT_ZONE_W/2     T_INDOOR_HOT_ZONE
+//                     |                                    |                                                  |                                     |
+// --- blue color --->)[<------------- cyano ------------->)[<-------------------- green --------------------->](<------------- yellow ------------->](<--- red ---
+#define T_INDOOR_PIN 13
+#define T_INDOOR_UNIT_CELSIUS
+#define T_INDOOR_HOT_ZONE 28
+#define T_INDOOR_CONFORT_ZONE 21
+#define T_INDOOR_CONFORT_ZONE_W 6
+#define T_INDOOR_COOL_ZONE 14
 
 // ============================================================================
 #endif

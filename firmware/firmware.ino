@@ -20,7 +20,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
 );
 
 // Setup a oneWire instance to communicate with any OneWire devices
-OneWire oneWire(T_SENS_PIN);
+OneWire oneWire(T_INDOOR_PIN);
 // Pass our oneWire reference to Dallas Temperature sensor
 DallasTemperature sensors(&oneWire);
 
@@ -206,7 +206,7 @@ uint16_t read_inner_temp(char str_out[]) {
 
     sensors.requestTemperatures();
 
-#ifdef T_SENS_UNIT_CELSIUS
+#ifdef T_INDOOR_UNIT_CELSIUS
     temperature = sensors.getTempCByIndex(0);
 #else
     temperature = sensors.getTempFByIndex(0);
@@ -216,7 +216,7 @@ uint16_t read_inner_temp(char str_out[]) {
     /* 6 is mininum width, 2 is precision; float value is copied onto str_temp*/
     dtostrf(temperature, 6, 2, str_temp);
 
-#ifdef T_SENS_UNIT_CELSIUS
+#ifdef T_INDOOR_UNIT_CELSIUS
     DEBUG_PRINTLN(" °C");
     sprintf(str_out,"%s C", str_temp);
 #else
@@ -224,16 +224,16 @@ uint16_t read_inner_temp(char str_out[]) {
     sprintf(str_out,"%s F", str_temp);
 #endif
 
-    if (temperature < T_COOL_ZONE) {
+    if (temperature < T_INDOOR_COOL_ZONE) {
         return colors[0];
     }
-    if (temperature < T_CONFORT_ZONE-T_CONFORT_ZONE_W/2.0) {
+    if (temperature < T_INDOOR_CONFORT_ZONE-T_INDOOR_CONFORT_ZONE_W/2.0) {
         return colors[1];
     }
-    if (temperature <= T_CONFORT_ZONE+T_CONFORT_ZONE_W/2.0) {
+    if (temperature <= T_INDOOR_CONFORT_ZONE+T_INDOOR_CONFORT_ZONE_W/2.0) {
         return colors[2];
     }
-    if (temperature <= T_HOT_ZONE) {
+    if (temperature <= T_INDOOR_HOT_ZONE) {
         return colors[3];
     }
     return colors[4];
